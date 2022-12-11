@@ -10,7 +10,7 @@ load_dotenv()
 
 INPUT_FILES_PATH = getenv("INPUT_FILES_PATH")
 PROCESSED_FILES_PATH = getenv("PROCESSED_FILES_PATH")
-DEBUG = bool(getenv("DEBUG"))
+DEBUG = getenv("DEBUG") == "True"
 
 print(INPUT_FILES_PATH, PROCESSED_FILES_PATH, DEBUG)
 
