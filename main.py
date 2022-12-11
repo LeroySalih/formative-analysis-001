@@ -10,7 +10,7 @@ load_dotenv()
 
 INPUT_FILES_PATH = getenv("INPUT_FILES_PATH")
 PROCESSED_FILES_PATH = getenv("PROCESSED_FILES_PATH")
-DEBUG = getenv("DEBUG")
+DEBUG = bool(getenv("DEBUG"))
 
 print(INPUT_FILES_PATH, PROCESSED_FILES_PATH, DEBUG)
 
@@ -42,7 +42,7 @@ def createDate(f):
     time = f"{time[0][1:]}:{time[1]}:{time[2]}"
     return f"{year} {time}"
 
-def process(f, data):
+def process(f, data, client):
 
     date = createDate(f)
 
@@ -55,13 +55,14 @@ def process(f, data):
         className = row["section"]
         pupil = row["student"]
         for key in list(row.keys())[4:]:
-            formativeName = key
-            formativeScore = row[formativeName]
+            formativeTitle = key
+            formativeScore = row[formativeTitle]
 
         if (formativeScore != ""):
-            print(date, className, pupil, formativeName, formativeScore)
-
-
+            formativeScore = int(formativeScore[:-1]) # remove the %
+            print("Adding", className, pupil, formativeTitle)
+            
+            client.table("gf_Submissions").upsert({"formativeTitle": formativeTitle, "className": className, "pupilName" : pupil, "score" : formativeScore, "uploadDate": date}).execute()
 
 
 def clean(f):
@@ -72,11 +73,16 @@ def clean(f):
     
         
 
+def getSupabaseClient ():
+    url: str = getenv("SUPABASE_URL")
+    key: str = getenv("SUPABASE_KEY")
+    return create_client(url, key)
+
 
 
 for f in getInputFiles():
     data = loadCSV(f)
-    process(f, data)
+    process(f, data, getSupabaseClient())
     clean(f)
 
 
