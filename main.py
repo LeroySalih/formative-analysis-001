@@ -49,7 +49,7 @@ def process(f, data, client):
     for row in data:
 
         #if this is not pupil data, skill it.
-        if row["student"] == "":
+        if row["student"] == "" or row["formativeTitle"]:
             continue
 
         className = row["section"]
@@ -58,11 +58,11 @@ def process(f, data, client):
             formativeTitle = key
             formativeScore = row[formativeTitle]
 
-        if (formativeScore != ""):
-            formativeScore = int(formativeScore[:-1]) # remove the %
-            print("Adding", className, pupil, formativeTitle)
-            
-            client.table("gf_Submissions").upsert({"formativeTitle": formativeTitle, "className": className, "pupilName" : pupil, "score" : formativeScore, "uploadDate": date}).execute()
+            if (formativeScore != ""):
+                formativeScore = int(formativeScore[:-1]) # remove the %
+                print("Adding", date, className, pupil, formativeTitle)
+                
+                client.table("gf_Submissions").upsert({"formativeTitle": formativeTitle, "className": className, "pupilName" : pupil, "score" : formativeScore, "uploadDate": date}).execute()
 
 
 def clean(f):
