@@ -5,6 +5,7 @@ import csv
 from dotenv import load_dotenv
 
 from supabase import create_client, Client
+import datetime 
 
 load_dotenv()
 
@@ -39,8 +40,9 @@ def createDate(f):
     year = f"{yearlst[2]}-{yearlst[1]}-{yearlst[0][1:]}"
     time = date.split(",")[1]
     time = time.split("_")
-    time = f"{time[0][1:]}:{time[1]}:{time[2]}"
-    return f"{year} {time}"
+    time = f"{time[0][1:]}:{time[2]}:{time[1]}"
+    dt = f"{year} {time}"
+    return dt
 
 def process(f, data, client):
 
@@ -49,7 +51,7 @@ def process(f, data, client):
     for row in data:
 
         #if this is not pupil data, skill it.
-        if row["student"] == "" or row["formativeTitle"]:
+        if row["student"] == "" :
             continue
 
         className = row["section"]
@@ -58,11 +60,13 @@ def process(f, data, client):
             formativeTitle = key
             formativeScore = row[formativeTitle]
 
-            if (formativeScore != ""):
+            if (formativeScore != "" and formativeTitle != ""):
                 formativeScore = int(formativeScore[:-1]) # remove the %
-                print("Adding", date, className, pupil, formativeTitle)
                 
-                client.table("gf_Submissions").upsert({"formativeTitle": formativeTitle, "className": className, "pupilName" : pupil, "score" : formativeScore, "uploadDate": date}).execute()
+                updateObj= {"formativeTitle": formativeTitle, "className": className, "pupilName" : pupil, "score" : formativeScore, "uploadDate": date}
+                client.table("gf_Submissions").upsert(updateObj).execute()
+                print("Added", date, className, pupil, formativeTitle)
+            
 
 
 def clean(f):
