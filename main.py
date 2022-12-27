@@ -10,14 +10,12 @@ import datetime
 
 from datetime import datetime
 
-
-
 load_dotenv()
 
 INPUT_FILES_PATH = getenv("INPUT_FILES_PATH")
 PROCESSED_FILES_PATH = getenv("PROCESSED_FILES_PATH")
 DEBUG = getenv("DEBUG") == "True"
-MONGO_URL = getenv("MONGO_URL")
+MONGO_URL = getenv("MONGO_URL") 
 
 print(INPUT_FILES_PATH, PROCESSED_FILES_PATH, DEBUG)
 
@@ -173,11 +171,10 @@ def getSupabaseClient ():
 
 
 def fileNameToDate (fName):
-    time = fName.split(", ")[1]
-    time = time.split("_") # a list of hours, mins, secs
-
-    time = fName[38:46]
-    dt = fName[26:36]
+    parts = fName.split(", ")
+    dt = parts[0][-10:]
+    time = parts[1][:8]
+    
 
     date = int(dt[0:2])
     month = int(dt[3: 5])
