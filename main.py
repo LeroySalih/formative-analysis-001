@@ -10,26 +10,11 @@ import datetime
 
 from datetime import datetime
 
-load_dotenv()
-
-INPUT_FILES_PATH = getenv("INPUT_FILES_PATH")
-PROCESSED_FILES_PATH = getenv("PROCESSED_FILES_PATH")
-DEBUG = getenv("DEBUG") == "True"
-MONGO_URL = getenv("MONGO_URL") 
-
-print(INPUT_FILES_PATH, PROCESSED_FILES_PATH, DEBUG)
-
-
-def get_database():
- 
-   # Provide the mongodb atlas url to connect python to mongodb using pymongo
-   CONNECTION_STRING = MONGO_URL
- 
-   # Create a connection using MongoClient. You can import MongoClient or use pymongo.MongoClient
-   client = MongoClient(CONNECTION_STRING)
- 
-   # Create the database for our example (we will use the same database throughout the tutorial
-   return client['gf_analysis']
+#Global Variables used in script
+INPUT_FILES_PATH = None
+PROCESSED_FILES_PATH = None
+DEBUG = None
+sbClient = None
 
 
 def getInputFiles ():
@@ -61,42 +46,7 @@ def createDate(f):
     dt = f"{year} {time}"
     return dt
 
-
-def get_latest_update():
-    try:
-        db = get_database()
-        collection = db["uploads"]
-
-        latest = list(collection.find().sort("date", -1))
-
-        return latest[0]
-    except:
-        return None
-
-
-def get_latest_update():
-    try:
-        db = get_database()
-        collection = db["uploads"]
-
-        latest = list(collection.find().sort("date", -1))
-
-        return latest[0]
-    except:
-        return None
-
-
 def write_to_supabase(client, updateObj):
-    
-
-    #Look for an existing 
-   # result = client.table("gf_Submissions").select("*") \
-   #     .eq("formativeTitle", updateObj["formativeTitle"]) \
-   #     .eq("pupilName", updateObj["pupilName"] ) \
-   #     .eq("className", updateObj["className"]) \
-   #     .eq("score", updateObj["score"]) \
-   #     .execute()
-
 
     #look to see if there is a record for this pupil, formtative, class and score
     result = client.table("gf_submissions.current").select("*") \
@@ -189,11 +139,29 @@ def fileNameToDate (fName):
 
 #last_update = get_latest_update()
 #print(last_update)
+def main():
+    global INPUT_FILES_PATH
+    global PROCESSED_FILES_PATH
+    global DEBUG
+    global sbClient 
 
-files = getInputFiles()
-files = sorted(files, key=fileNameToDate)
-for f in files:
-    
-    data = loadCSV(f)
-    process(f, data, getSupabaseClient())
-    clean(f)
+    load_dotenv()
+
+    INPUT_FILES_PATH = getenv("INPUT_FILES_PATH")
+    PROCESSED_FILES_PATH = getenv("PROCESSED_FILES_PATH")
+    DEBUG = getenv("DEBUG") == "True"
+    sbClient = getSupabaseClient()
+
+    print(INPUT_FILES_PATH, PROCESSED_FILES_PATH, DEBUG)
+    result = sbClient.table("gf_submissions.current").select("*").execute()
+    print(f"Found {len(result.data)} rows in current table")
+
+    files = getInputFiles()
+    files = sorted(files, key=fileNameToDate)
+    for f in files:
+        
+        data = loadCSV(f)
+        process(f, data, sbClient)
+        clean(f)
+
+main()
